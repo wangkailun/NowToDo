@@ -1,0 +1,60 @@
+from tkinter import *
+import socket
+import _thread
+import time
+from tkinter.filedialog import *
+import os , struct
+
+class Win:
+	def __init__(self):
+		self.window = Tk()
+		self.window.title("飞鸽客户端")
+		self.frame1 = Frame(self.window)
+		self.frame1.pack()
+		self.text = Text(self.frame1)
+		self.text.pack()
+		self.text.config(bd = 4 , relief = RIDGE)
+		self.MSG = StringVar()
+		self.entry = Entry(self.frame1 , textvariable = self.MSG)
+		self.entry.pack(side = LEFT , expand = True , fill = BOTH)
+		self.entry.config(bd = 4 , relief = RIDGE)
+		self.button = Button(self.frame1 , text = "发送消息" , command = self.SendMessage)
+		self.button.pack(side = RIGHT)
+		self.button.config(bd = 4 , relief = RAISED)
+		self.button.config(bg = "white" , fg = "black")
+		
+	def ReceviveMessage(self):
+		ServerIP = 'localhost'
+		ServerPort = 50000
+		self.s = socket.socket(socket.AF_INET , socket.SOCK_STREAM)
+		self.s.connect((ServerIP,ServerPort))
+		while True:
+			self.message = self.s.recv(1024).decode("utf8")
+			if self.message !='':
+				a = time.strftime("%H:%M:%S" , time.localtime())
+				self.text.tag_config('a',foreground = "green")
+				self.text.insert(INSERT , "服务器 * * * * "+a+" * * * * *\n","a")
+				self.text.insert(INSERT , "   "+self.message+"\n")
+		
+		
+	def SendMessage(self):
+		if self.MSG.get() !='':
+			a = time.strftime("%H:%M:%S",time.localtime())
+			self.text.tag_config('a',foreground = "green")
+			self.text.insert(INSERT , "客户端 * * * * "+a+" * * * * *\n",'a')
+			self.text.insert(INSERT,"    "+self.MSG.get()+ "\n")
+			self.s.send(self.MSG.get().encode("utf8"))
+			self.entry.delete(0 , END)
+	
+	
+	def StartNewThread(self):
+		_thread.start_new_thread(self.ReceviveMessage,())
+			
+		
+def main():
+	app = Win()
+	app.StartNewThread()
+	app.window.mainloop()
+			
+if __name__ == "__main__":
+	main()
